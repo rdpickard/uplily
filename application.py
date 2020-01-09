@@ -8,6 +8,8 @@ from werkzeug.utils import secure_filename
 
 application = flask.Flask(__name__)
 
+uploaded_files = list()
+
 uploads_dir = "file:///tmp/"
 
 # P validate the uploads location
@@ -41,6 +43,7 @@ def upload_file():
     if save_url.scheme == 'file':
         application.logger.debug(os.path.join(save_url.path, filename))
         file.save(os.path.join(save_url.path, filename))
+        uploaded_files.append(filename)
     else:
         return "Can't save file. Uploads scheme [{}] unsupported".format(save_url.scheme)
     return "OK"
@@ -52,9 +55,22 @@ def index():
     Renders the 'index' page
     :return:
     """
-    #return flask.render_template('index.jinja2', my_server=flask.request.url_root)
-    return "Hello Dog"
+    return flask.render_template('index.jinja2', my_server=flask.request.url_root)
+
+
+@application.route('/dl/<string:filename>')
+def download_file(filename):
+
+    if filename not in uploaded_files:
+        flask.abort(404)
+    else:
+        return flask.send_from_directory(save_url.path, filename, as_attachment=True)
+
 
 @application.before_first_request
 def pre_first_request():
     pass
+
+
+if __name__== "__main__":
+    application.run()
