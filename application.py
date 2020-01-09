@@ -52,8 +52,8 @@ def index():
     Renders the 'index' page
     :return:
     """
-    return flask.render_template('index.jinja2', my_server=flask.request.url_root)
-
+    #return flask.render_template('index.jinja2', my_server=flask.request.url_root)
+    return "Hello Dog"
 
 @application.before_first_request
 def pre_first_request():
