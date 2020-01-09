@@ -1,43 +1,18 @@
 import os
-import configparser
-import argparse
 from urllib.parse import urlparse
 import sys
-import pathlib
 
-from flask import Flask, flash, request, redirect, url_for
+import flask
 from werkzeug.utils import secure_filename
 
 
-# P By StackOverflow user https://stackoverflow.com/users/190597/unutbu
-class VAction(argparse.Action):
-    def __init__(self, option_strings, dest, nargs=None, const=None,
-                 default=None, type=None, choices=None, required=False,
-                 help=None, metavar=None):
-        super(VAction, self).__init__(option_strings, dest, nargs, const,
-                                      default, type, choices, required,
-                                      help, metavar)
-        self.values = 0
-
-    def __call__(self, parser, args, values, option_string=None):
-        # print('values: {v!r}'.format(v=values))
-        if values is None:
-            self.values += 1
-        else:
-            try:
-                self.values = int(values)
-            except ValueError:
-                self.values = values.count('v') + 1
-        setattr(args, self.dest, self.values)
-
-
-application = Flask(__name__)
+application = flask.Flask(__name__)
 
 uploads_dir = "file:///tmp/"
 
 # P validate the uploads location
 save_url = urlparse(uploads_dir)
-if save_url.scheme not in ('file'):
+if save_url.scheme not in ('file', 's3'):
     application.logger.error("Uploads location scheme [{}] is not supported".format(save_url.scheme))
     sys.exit(-1)
 if save_url.scheme == 'file':
@@ -46,7 +21,7 @@ if save_url.scheme == 'file':
             os.makedirs(save_url.path)
         except Exception as mkdirerr:
             application.logger.critical("Could not create uploads directory [{}] on local "
-                                "file system. Err [{}]".format(save_url.path, mkdirerr))
+                                        "file system. Err [{}]".format(save_url.path, mkdirerr))
             raise mkdirerr
 
 
@@ -54,9 +29,9 @@ if save_url.scheme == 'file':
 @application.route('/uplily', methods=['POST'])
 def upload_file():
     # check if the post request has the file part
-    if 'file' not in request.files:
+    if 'file' not in flask.request.files:
         return "No file detected"
-    file = request.files['file']
+    file = flask.request.files['file']
 
     if file.filename == '':
         return "No file selected"
@@ -71,6 +46,17 @@ def upload_file():
     return "OK"
 
 
+@application.route('/')
+def index():
+    """
+    Renders the 'index' page
+    :return:
+    """
+    return flask.render_template('index.jinja2', my_server=flask.request.url_root)
+
+
 @application.before_first_request
 def pre_first_request():
     pass
+
+application.run()
