@@ -1,0 +1,25 @@
+<!doctype html>
+<head><title>UpLily Documentation</title></head>
+<h2 style="color: navy">UpLily file upload catcher documentation</h2>
+
+UpLily is a web service for uploading and downloading files over HTTP. It is intended to be used in situations where
+transferring files between computers is hindered by network policy or accessibility. The functionality is limited
+to uploading and downloading files to keep the implementation simple enough to make the service as easy as possible to
+start up and bring down once the desired files are moved around.
+
+The service is implemented in Python 3 and uses the Flask framework to handle the HTTP protocol. The service can be
+run using the Flask basic web server capabilities or as a WSGI application behind full web server software such as
+NGinx, Apache or Gunicorn. The WSGI functionality allows UpLily to be run on 'serverless' cloud services such as AWS
+Elastic Beanstalk and Heroku dynamos.
+
+The documentation on the GitHub site for the UpLily project has example recipes for running in different environment.
+
+Example use cases
+
+These are a few use cases where UpLily can facilitate hosts exchanging files. In
+
+Two users in different, non-publicly accessible networks
+
+User on corporate network that has constrained files leaving the network
+
+A host on a network that can not reach the internet
