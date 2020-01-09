@@ -1,6 +1,7 @@
 import os
 from urllib.parse import urlparse
 import sys
+import hashlib
 
 import flask
 from werkzeug.utils import secure_filename
@@ -8,9 +9,19 @@ from werkzeug.utils import secure_filename
 
 application = flask.Flask(__name__)
 
-uploaded_files = list()
+uploaded_files = dict()
 
 uploads_dir = "file:///tmp/"
+
+
+# P Gently stolen from https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
+def md5_a_file(fname):
+    hash_md5 = hashlib.md5()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_md5.update(chunk)
+    return hash_md5.hexdigest()
+
 
 # P validate the uploads location
 save_url = urlparse(uploads_dir)
@@ -27,8 +38,7 @@ if save_url.scheme == 'file':
             raise mkdirerr
 
 
-@application.route('/', methods=['POST'])
-@application.route('/uplily', methods=['POST'])
+@application.route('/ul/', methods=['POST'])
 def upload_file():
     # check if the post request has the file part
     if 'file' not in flask.request.files:
@@ -43,7 +53,9 @@ def upload_file():
     if save_url.scheme == 'file':
         application.logger.debug(os.path.join(save_url.path, filename))
         file.save(os.path.join(save_url.path, filename))
-        uploaded_files.append(filename)
+        uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
+                                    "locale": "Local FS",
+                                    "md5_hash": md5_a_file(os.path.join(save_url.path, filename))}
     else:
         return "Can't save file. Uploads scheme [{}] unsupported".format(save_url.scheme)
     return "OK"
@@ -55,7 +67,8 @@ def index():
     Renders the 'index' page
     :return:
     """
-    return flask.render_template('index.jinja2', my_server=flask.request.url_root)
+    return flask.render_template('index.jinja2',
+                                 my_server=flask.request.url_root, uploaded_files_list=uploaded_files)
 
 
 @application.route('/dl/<string:filename>')
@@ -72,5 +85,5 @@ def pre_first_request():
     pass
 
 
-if __name__== "__main__":
+if __name__ == "__main__":
     application.run()
