@@ -58,5 +58,3 @@ def index():
 @application.before_first_request
 def pre_first_request():
     pass
-
-application.run()
