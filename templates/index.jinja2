@@ -1,6 +1,18 @@
 <!doctype html>
 <head><title>UpLily</title></head>
-Example of up loading file "local/testfile.txt' to UpLily
+<h2>UpLily file upload catcher</h2>
+
+A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services.<br>
+<br>
+
+<form action="/ul/"
+      method="post"
+      enctype="multipart/form-data">
+    Select a file: <input type="file" name="file"/><br>
+    <input type="submit" value="Upload Now">
+</form>
+
+Example of up loading file "local/testfile.txt' to UpLily on command line with curl
 <pre>
     curl -X POST -F 'file=@./local/testfile.txt' {{ my_server }}ul/
 </pre>
@@ -9,8 +21,12 @@ Available files:
 
 {% if uploaded_files_list.keys()|length > 0 %}
     {% for key, value in uploaded_files_list.items() %}
-        <li><a href="{{ value["download_url"] }}">{{ key }} ({{ value["locale"] }}) (MD5: {{ value["md5_hash"]}})</a></li>
+        <li><a href="{{ value["download_url"] }}">{{ key }} ({{ value["locale"] }}) (MD5: {{ value["md5_hash"]}}) (size: {{ value["file_size_in_bytes"] }} Bytes)</a></li>
     {% endfor %}
 {% else %}
-    No files uploaded yet
+    <i>No files uploaded yet</i>
 {% endif %}
+
+<br>
+<br>
+UpLily project is on GitHub <a href="https://github.com/rdpickard/uplily">here</a>.

@@ -55,7 +55,8 @@ def upload_file():
         file.save(os.path.join(save_url.path, filename))
         uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
                                     "locale": "Local FS",
-                                    "md5_hash": md5_a_file(os.path.join(save_url.path, filename))}
+                                    "md5_hash": md5_a_file(os.path.join(save_url.path, filename)),
+                                    "file_size_in_bytes": os.stat(os.path.join(save_url.path, filename)).st_size}
     else:
         return "Can't save file. Uploads scheme [{}] unsupported".format(save_url.scheme)
     return "OK"
