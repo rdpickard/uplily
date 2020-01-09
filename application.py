@@ -59,7 +59,11 @@ def upload_file():
                                     "file_size_in_bytes": os.stat(os.path.join(save_url.path, filename)).st_size}
     else:
         return "Can't save file. Uploads scheme [{}] unsupported".format(save_url.scheme)
-    return "OK"
+
+    if flask.request.args.get("browser_upload", False):
+        return flask.redirect("/", code=302)
+    else:
+        return "OK"
 
 
 @application.route('/')

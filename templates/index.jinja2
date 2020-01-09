@@ -1,27 +1,34 @@
 <!doctype html>
 <head><title>UpLily</title></head>
-<h2>UpLily file upload catcher</h2>
+<h2 style="color: navy">UpLily file upload catcher</h2>
 
-A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services.<br>
+A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services. Documentation is <a href="/docs/">here</a>. <br>
 <br>
 
-<form action="/ul/"
+<h3 style="color: darkgreen">Upload file from this page:</h3>
+<form action="/ul/?browser_upload=True"
       method="post"
       enctype="multipart/form-data">
-    Select a file: <input type="file" name="file"/><br>
-    <input type="submit" value="Upload Now">
+    Step 1) Select a file: <input type="file" name="file" />
+    <br>
+    <br>
+    Step 2) Upload file: <input type="submit" value="Upload Now">
 </form>
 
-Example of up loading file "local/testfile.txt' to UpLily on command line with curl
+<br><br>
+
+<h3 style="color: darkgreen">Example of uploading file "local/testfile.txt" to UpLily on command line with curl</h3>
 <pre>
     curl -X POST -F 'file=@./local/testfile.txt' {{ my_server }}ul/
 </pre>
 
-Available files:
+<br>
+
+<h3 style="color: darkorange">Available files to download:</h3>
 
 {% if uploaded_files_list.keys()|length > 0 %}
     {% for key, value in uploaded_files_list.items() %}
-        <li><a href="{{ value["download_url"] }}">{{ key }} ({{ value["locale"] }}) (MD5: {{ value["md5_hash"]}}) (size: {{ value["file_size_in_bytes"] }} Bytes)</a></li>
+        <li><a href="{{ value["download_url"] }}">{{ key }}</a> ({{ value["locale"] }}, size: {{ value["file_size_in_bytes"] }} Bytes, MD5: {{ value["md5_hash"]}})</li>
     {% endfor %}
 {% else %}
     <i>No files uploaded yet</i>
@@ -29,4 +36,4 @@ Available files:
 
 <br>
 <br>
-UpLily project is on GitHub <a href="https://github.com/rdpickard/uplily">here</a>.
+<h3 style="color: slategrey"> UpLily project is on GitHub <a href="https://github.com/rdpickard/uplily">here</a>.</h3>
