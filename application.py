@@ -11,6 +11,11 @@ from werkzeug.utils import secure_filename
 
 application = flask.Flask(__name__)
 
+uploads_dir = "/tmp/uplily/"
+if not os.path.exists(uploads_dir):
+    os.mkdir(uploads_dir)
+
+
 # P Gently stolen from https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
 def md5_a_file(fname):
     hash_md5 = hashlib.md5()
@@ -31,7 +36,6 @@ def upload_file():
         return "No file selected"
 
     filename = secure_filename(file.filename)
-    uploads_dir = os.environ["uploads_dir"]
 
     application.logger.debug(os.path.join(uploads_dir, filename))
     file.save(os.path.join(uploads_dir, filename))
@@ -49,7 +53,7 @@ def index():
     :return:
     """
     uploaded_files = dict()
-    uploads_dir = os.environ["uploads_dir"]
+
     for filename in [f for f in os.listdir(uploads_dir) if os.path.isfile(uploads_dir+"/"+f)]:
         uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
                                     "locale": "Local FS",
@@ -65,8 +69,6 @@ def index():
 @application.route('/dl/<string:filename>')
 def download_file(filename):
 
-    uploads_dir = os.environ["uploads_dir"]
-
     if filename not in os.listdir(uploads_dir):
         return ("Cant find in "+uploads_dir)
         flask.abort(404)
@@ -76,23 +78,7 @@ def download_file(filename):
 
 @application.before_first_request
 def pre_first_request():
-    if "uploads_dir" not in os.environ:
-        # TODO Need to change this static value of "/tmp/" as the dir to write uploaded files to
-        trys = 0
-        while trys < 10:
-            uploads_dir = "/tmp/{}/".format(
-                ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)]))
-            if os.path.exists(uploads_dir):
-                uploads_dir = None
-                trys += 1
-                continue
-            else:
-                os.mkdir(uploads_dir)
-                break
-        if uploads_dir is None:
-            application.logger.error("Could not create temporary upload location on file system. Bailing")
-            sys.exit(-1)
-        os.environ["uploads_dir"] = uploads_dir
+    pass
 
 
 if __name__ == "__main__":
