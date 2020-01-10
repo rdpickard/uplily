@@ -1,9 +1,5 @@
 import os
-from urllib.parse import urlparse
-import sys
 import hashlib
-import random
-import string
 
 import flask
 from werkzeug.utils import secure_filename
@@ -70,7 +66,6 @@ def index():
 def download_file(filename):
 
     if filename not in os.listdir(uploads_dir):
-        return ("Cant find in "+uploads_dir)
         flask.abort(404)
     else:
         return flask.send_from_directory(uploads_dir, filename, as_attachment=True)
