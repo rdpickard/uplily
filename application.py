@@ -31,9 +31,10 @@ def upload_file():
         return "No file selected"
 
     filename = secure_filename(file.filename)
+    uploads_dir = os.environ["uploads_dir"]
 
-    application.logger.debug(os.path.join(application.config["uploads_dir"], filename))
-    file.save(os.path.join(application.config["uploads_dir"], filename))
+    application.logger.debug(os.path.join(uploads_dir, filename))
+    file.save(os.path.join(uploads_dir, filename))
 
     if flask.request.args.get("browser_upload", False):
         return flask.redirect("/", code=302)
