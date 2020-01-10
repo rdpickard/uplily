@@ -1,7 +1,7 @@
 {
   "name": "UpLily",
   "description": "An ephemeral, HTTP file uploader / downloader",
-  "logo": "https://github.com/rdpickard/uplily/blob/master/media/lily_logo.png",
+  "logo": "https://github.com/rdpickard/uplily/raw/master/media/lily_logo.png",
   "repository": "https://github.com/rdpickard/uplily",
   "keywords": ["python3", "express", "static"]
 }
