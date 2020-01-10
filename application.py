@@ -67,20 +67,23 @@ def index():
     """
     uploaded_files = dict()
 
-    for filename in [f for f in os.listdir(uploads_dir) if os.path.isfile(application.config["uploads_dir"]+"/"+f)]:
+    for filename in [f for f in os.listdir(application.config["uploads_dir"]) if os.path.isfile(application.config["uploads_dir"]+"/"+f)]:
         uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
                                     "locale": "Local FS",
                                     "md5_hash": md5_a_file(os.path.join(application.config["uploads_dir"], filename)),
                                     "file_size_in_bytes": os.stat(os.path.join(application.config["uploads_dir"], filename)).st_size}
 
     return flask.render_template('index.jinja2',
-                                 my_server=flask.request.url_root, uploaded_files_list=uploaded_files)
+                                 my_server=flask.request.url_root,
+                                 uploaded_files_dir=application.config["uploads_dir"],
+                                 uploaded_files_list=uploaded_files)
 
 
 @application.route('/dl/<string:filename>')
 def download_file(filename):
 
     if filename not in os.listdir(application.config["uploads_dir"]):
+        return ("Cant find in "+application.config["uploads_dir"])
         flask.abort(404)
     else:
         return flask.send_from_directory(application.config["uploads_dir"], filename, as_attachment=True)
