@@ -132,9 +132,3 @@ local
 .idea
 __pycache__
 memory:
-
-
-# Elastic Beanstalk Files
-.elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml

@@ -56,3 +56,22 @@ python3 application.py
 This recipe works fine with a [python virtual environment](https://docs.python-guide.org/dev/virtualenvs/).
 
 The output of running application.py will tell you the URL to access the web app.
+
+#### Running on a AWS Elastic-Beanstalk
+
+This method requires you have an existing AWS [account](https://console.aws.amazon.com/?nc2=h_m_mc), the AWS command line tools [installed](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html).
+
+_This method has a monetary cost billed by Amazon._ It is probably low, but it isn't free to run on AWS.
+
+```
+git clone https://github.com/rdpickard/uplily
+cd uplily/
+eb init -p python-3.6 uplily --region us-east-2
+eb create uplily-env
+eb open
+```
+
+After you're finished, stop and release all of the AWS resources
+```
+eb terminate
+```
