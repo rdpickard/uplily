@@ -1,6 +1,6 @@
 # UpLily
 
-UpLily is a web service for uploading and downloading files over HTTP for situations where transferring files between
+UpLily is a web service for uploading and downloading files over HTTP in situations where transferring files between
 hosts is hindered by network policy or accessibility.
 
 The service can run locally on a personal computer or 'serverless' cloud services such as AWS Elastic Beanstalk and
@@ -17,7 +17,11 @@ in as a Heroku application as a 'drop off location'
 
 #### User on corporate network that has constrained files leaving the network
 
+It isn't uncommon for corporate IT to put restrictions on network file transfers. Email size is often capped, filesharing sites such as AWS S3, box.com & PasteBin are often blocked by web proxies, protocols such as scp and ftp blocked at edge firewalls.
+
 #### Hosts on a LAN with no Internet access
+
+"Barebones" smart devices or appliances don't often have the capability to run file sharing protocols that are common on personal computers or full servers. HTTP is an almost universally supported protocol by even the most basic systems.
 
 ### Recipes
 
