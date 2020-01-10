@@ -1,0 +1,6 @@
+{
+  "name": "UpLily",
+  "description": "An ephemeral, HTTP file uploader / downloader",
+  "repository": "https://github.com/rdpickard/uplily",
+  "keywords": ["python3", "express", "static"]
+}
