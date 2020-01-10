@@ -2,6 +2,8 @@ import os
 from urllib.parse import urlparse
 import sys
 import hashlib
+import random
+import string
 
 import flask
 from werkzeug.utils import secure_filename
@@ -9,9 +11,21 @@ from werkzeug.utils import secure_filename
 
 application = flask.Flask(__name__)
 
-uploaded_files = dict()
 
-uploads_dir = "file:///tmp/"
+#TODO Need to change this static value of "/tmp/" as the dir to write uploaded files to
+trys = 0
+while trys < 10:
+    uploads_dir = "/tmp/{}/".format(''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)]))
+    if os.path.exists(uploads_dir):
+        uploads_dir = None
+        trys += 1
+        continue
+    else:
+        os.mkdir(uploads_dir)
+        break
+if uploads_dir is None:
+    application.logger.error("Could not create temporary upload location on file system. Bailing")
+    sys.exit(-1)
 
 
 # P Gently stolen from https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
@@ -21,21 +35,6 @@ def md5_a_file(fname):
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
-# P validate the uploads location
-save_url = urlparse(uploads_dir)
-if save_url.scheme not in ('file', 's3'):
-    application.logger.error("Uploads location scheme [{}] is not supported".format(save_url.scheme))
-    sys.exit(-1)
-if save_url.scheme == 'file':
-    if not os.path.exists(save_url.path):
-        try:
-            os.makedirs(save_url.path)
-        except Exception as mkdirerr:
-            application.logger.critical("Could not create uploads directory [{}] on local "
-                                        "file system. Err [{}]".format(save_url.path, mkdirerr))
-            raise mkdirerr
 
 
 @application.route('/ul/', methods=['POST'])
@@ -50,15 +49,8 @@ def upload_file():
 
     filename = secure_filename(file.filename)
 
-    if save_url.scheme == 'file':
-        application.logger.debug(os.path.join(save_url.path, filename))
-        file.save(os.path.join(save_url.path, filename))
-        uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
-                                    "locale": "Local FS",
-                                    "md5_hash": md5_a_file(os.path.join(save_url.path, filename)),
-                                    "file_size_in_bytes": os.stat(os.path.join(save_url.path, filename)).st_size}
-    else:
-        return "Can't save file. Uploads scheme [{}] unsupported".format(save_url.scheme)
+    application.logger.debug(os.path.join(uploads_dir, filename))
+    file.save(os.path.join(uploads_dir, filename))
 
     if flask.request.args.get("browser_upload", False):
         return flask.redirect("/", code=302)
@@ -72,6 +64,14 @@ def index():
     Renders the 'index' page
     :return:
     """
+    uploaded_files = dict()
+
+    for filename in [f for f in os.listdir(uploads_dir) if os.path.isfile(uploads_dir+"/"+f)]:
+        uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
+                                    "locale": "Local FS",
+                                    "md5_hash": md5_a_file(os.path.join(uploads_dir, filename)),
+                                    "file_size_in_bytes": os.stat(os.path.join(uploads_dir, filename)).st_size}
+
     return flask.render_template('index.jinja2',
                                  my_server=flask.request.url_root, uploaded_files_list=uploaded_files)
 
@@ -79,10 +79,10 @@ def index():
 @application.route('/dl/<string:filename>')
 def download_file(filename):
 
-    if filename not in uploaded_files:
+    if filename not in os.listdir(uploads_dir):
         flask.abort(404)
     else:
-        return flask.send_from_directory(save_url.path, filename, as_attachment=True)
+        return flask.send_from_directory(uploads_dir, filename, as_attachment=True)
 
 
 @application.before_first_request
