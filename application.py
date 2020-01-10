@@ -11,22 +11,23 @@ from werkzeug.utils import secure_filename
 
 application = flask.Flask(__name__)
 
-if "uploads_dir" not in application.config.keys():
-    #TODO Need to change this static value of "/tmp/" as the dir to write uploaded files to
-    trys = 0
-    while trys < 10:
-        uploads_dir = "/tmp/{}/".format(''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)]))
-        if os.path.exists(uploads_dir):
-            uploads_dir = None
-            trys += 1
-            continue
-        else:
-            os.mkdir(uploads_dir)
-            break
-    if uploads_dir is None:
-        application.logger.error("Could not create temporary upload location on file system. Bailing")
-        sys.exit(-1)
-    application.config["uploads_dir"] = uploads_dir
+with application.app_context():
+    if "uploads_dir" not in application.config.keys():
+        #TODO Need to change this static value of "/tmp/" as the dir to write uploaded files to
+        trys = 0
+        while trys < 10:
+            uploads_dir = "/tmp/{}/".format(''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)]))
+            if os.path.exists(uploads_dir):
+                uploads_dir = None
+                trys += 1
+                continue
+            else:
+                os.mkdir(uploads_dir)
+                break
+        if uploads_dir is None:
+            application.logger.error("Could not create temporary upload location on file system. Bailing")
+            sys.exit(-1)
+        application.config["uploads_dir"] = uploads_dir
 
 
 # P Gently stolen from https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file
