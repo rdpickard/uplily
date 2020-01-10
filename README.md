@@ -6,8 +6,7 @@ hosts is hindered by network policy or accessibility.
 The service can run locally on a personal computer or 'serverless' cloud services such as AWS Elastic Beanstalk and
 Heroku Dynamos.
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/heroku/node-js-getting-started)
-
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 ##### Example use cases
 
 ###### Two users in different, non-publicly accessible networks
