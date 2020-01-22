@@ -1,9 +1,10 @@
 import os
 import hashlib
+import json
 
 import flask
 from werkzeug.utils import secure_filename
-
+import boto3
 
 application = flask.Flask(__name__)
 
@@ -69,6 +70,39 @@ def download_file(filename):
         flask.abort(404)
     else:
         return flask.send_from_directory(uploads_dir, filename, as_attachment=True)
+
+
+@application.route('/sign_s3/')
+def sign_s3():
+    # From Heroku documentation https://devcenter.heroku.com/articles/s3-upload-python
+
+    if not all(map(lambda ev: os.environ.get(ev) is not None,
+                   ['S3_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])):
+        content = {'error': 'S3 environment variables not set up'}
+        return content, 501
+
+    s3_bucket = os.environ.get('S3_BUCKET')
+
+    file_name = flask.request.args.get('file_name')
+    file_type = flask.request.args.get('file_type')
+
+    s3 = boto3.client('s3')
+
+    presigned_post = s3.generate_presigned_post(
+        Bucket=s3_bucket,
+        Key=file_name,
+        Fields={"acl": "public-read", "Content-Type": file_type},
+        Conditions=[
+            {"acl": "public-read"},
+            {"Content-Type": file_type}
+        ],
+        ExpiresIn=3600
+    )
+
+    return json.dumps({
+        'data': presigned_post,
+        'url': 'https://%s.s3.amazonaws.com/%s' % (s3_bucket, file_name)
+    })
 
 
 @application.before_first_request
