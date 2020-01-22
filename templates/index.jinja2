@@ -14,7 +14,6 @@
 
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
-                console.log(xhr)
 
                 if (xhr.status === 200 || xhr.status === 204) {
 
@@ -42,7 +41,6 @@
         xhr.send();
     }
 
-    console.log("Here")
 </script>
 
 <h2 style="color: navy">UpLily file upload catcher</h2>
@@ -87,7 +85,6 @@ A tiny server for uploading and downloading files over HTTP. Can run locally or 
 <script>
         (function () {
         document.getElementById("file_input").onchange = function () {
-            console.log("file_input change");
             var files = document.getElementById("file_input").files;
             var file = files[0];
             if (!file) {

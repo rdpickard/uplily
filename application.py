@@ -91,9 +91,9 @@ def sign_s3():
     presigned_post = s3.generate_presigned_post(
         Bucket=s3_bucket,
         Key=file_name,
-        Fields={"acl": "public-read", "Content-Type": file_type},
+        Fields={"acl": "private", "Content-Type": file_type},
         Conditions=[
-            {"acl": "public-read"},
+            {"acl": "private"},
             {"Content-Type": file_type}
         ],
         ExpiresIn=3600
