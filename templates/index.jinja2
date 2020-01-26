@@ -3,7 +3,9 @@
 
 <script type="text/javascript">
     function uploadFile(file, s3Data, url) {
+        console.log("Uploading to "+s3Data.url)
         var xhr = new XMLHttpRequest();
+
         xhr.open("POST", s3Data.url);
 
         var postData = new FormData();
@@ -13,16 +15,25 @@
         postData.append('file', file);
 
         xhr.onreadystatechange = function () {
+
             if (xhr.readyState === 4) {
-                console.log(xhr)
+                console.log(xhr.responseText)
 
                 if (xhr.status === 200 || xhr.status === 204) {
 
+                } else if (xhr.status === 302 || xhr.status === 307) {
+                    // Newly created S3 buckets will respond with a 30x redirect for their first couple hours of
+                    // existence. This seems to be due to backend DNS processes trailing the bucket creation.
+                    // Follow the redirect
+                    console.log("Got redirect response ("+xhr.status+") following to "+xhr.getResponseHeader("Location"))
+                    s3Data.url = xhr.getResponseHeader("Location")
+                    uploadFile(file, s3Data, url)
                 } else {
                     alert("Could not upload file.");
                 }
             }
         };
+
         xhr.send(postData);
     }
 
@@ -34,7 +45,8 @@
                 if (xhr.status === 200) {
                     var response = JSON.parse(xhr.responseText);
                     uploadFile(file, response.data, response.url);
-                } else {
+                }
+                else {
                     alert("Could not get signed URL.");
                 }
             }
@@ -42,7 +54,6 @@
         xhr.send();
     }
 
-    console.log("Here")
 </script>
 
 <h2 style="color: navy">UpLily file upload catcher</h2>
@@ -87,7 +98,6 @@ A tiny server for uploading and downloading files over HTTP. Can run locally or 
 <script>
         (function () {
         document.getElementById("file_input").onchange = function () {
-            console.log("file_input change");
             var files = document.getElementById("file_input").files;
             var file = files[0];
             if (!file) {
