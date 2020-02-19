@@ -66,7 +66,7 @@ A tiny server for uploading and downloading files over HTTP. Can run locally or 
 <form action="/ul/?browser_upload=True"
       method="post"
       enctype="multipart/form-data">
-    Step 1) Select a file: <input type="file"  id="file_input"/>
+    Step 1) Select a file: <input type="file"  name="file"/>
     <br>
     <br>
     Step 2) Upload file: <input type="submit" value="Upload Now">
@@ -97,7 +97,7 @@ A tiny server for uploading and downloading files over HTTP. Can run locally or 
 
 <script>
         (function () {
-        document.getElementById("file_input").onchange = function () {
+        document.getElementById("file_input_crap").onchange = function () {
             var files = document.getElementById("file_input").files;
             var file = files[0];
             if (!file) {
