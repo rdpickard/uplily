@@ -75,3 +75,11 @@ After you're finished, stop and release all of the AWS resources
 ```
 eb terminate
 ```
+
+### Projects and open code used
+
++ [Semantic UI](https://semantic-ui.com/) version 2.4 of the web layout and javascript framework
++ [jQuery](https://jquery.com/) version 3.4.1 of the javascript framework
++ [Flask](https://flask.palletsprojects.com/en/1.1.x/) python WSGI web application framework
+
+And a whole lot of great Python3 modules that are listed in requirements.txt file.
