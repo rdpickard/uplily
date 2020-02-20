@@ -2,18 +2,24 @@
 <head>
     <title>UpLily</title>
     <link href="css/semantic.min.css" rel="stylesheet">
+    <link href="css/uplily.css" rel="stylesheet">
+
+    <script src="js/jquery-3.4.1.min.js"></script>
 
     <script src="js/semantic.min.js"></script>
+
 </head>
 
 <script type="text/javascript">
+
     function uploadFile(file, s3Data, url) {
-        console.log("Uploading to "+s3Data.url)
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
+        let key = null;
 
         xhr.open("POST", s3Data.url);
 
-        var postData = new FormData();
+        let postData = new FormData();
+
         for (key in s3Data.fields) {
             postData.append(key, s3Data.fields[key]);
         }
@@ -22,7 +28,6 @@
         xhr.onreadystatechange = function () {
 
             if (xhr.readyState === 4) {
-                console.log(xhr.responseText)
 
                 if (xhr.status === 200 || xhr.status === 204) {
 
@@ -30,8 +35,7 @@
                     // Newly created S3 buckets will respond with a 30x redirect for their first couple hours of
                     // existence. This seems to be due to backend DNS processes trailing the bucket creation.
                     // Follow the redirect
-                    console.log("Got redirect response ("+xhr.status+") following to "+xhr.getResponseHeader("Location"))
-                    s3Data.url = xhr.getResponseHeader("Location")
+                    s3Data.url = xhr.getResponseHeader("Location");
                     uploadFile(file, s3Data, url)
                 } else {
                     alert("Could not upload file.");
@@ -43,15 +47,14 @@
     }
 
     function getSignedRequest(file) {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open("GET", "/sign_s3?file_name=" + file.name + "&file_type=" + file.type);
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
-                    var response = JSON.parse(xhr.responseText);
+                    let response = JSON.parse(xhr.responseText);
                     uploadFile(file, response.data, response.url);
-                }
-                else {
+                } else {
                     alert("Could not get signed URL.");
                 }
             }
@@ -61,75 +64,200 @@
 
 </script>
 
-<h2 class="ui header">UpLily file upload catcher</h2>
+<body>
+<div class="content">
+    <div class="ui main container">
+        <h2 class="ui header">UpLily file upload catcher</h2>
 
-A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services. <br>
+        A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services. <br>
 
-{% if message_ok is defined and message_ok is not none and message_ok|length %}
-<div class="ui positive message">
-  <i class="close icon"></i>
-  <div class="header">
-    {{ message_ok }}
-  </div>
-</div>
-{%endif %}
+        {% if message_ok is defined and message_ok is not none and message_ok|length %}
+            <div class="ui positive message">
+                <i class="close icon"></i>
+                <div class="header">
+                    {{ message_ok }}
+                </div>
+            </div>
+        {% endif %}
 
-{% if message_err is defined and message_err is not none and message_err|length %}
+        {% if message_err is defined and message_err is not none and message_err|length %}
 
-<div class="ui negative message">
-  <i class="close icon"></i>
-  <div class="header">
-    {{ message_err }}
-  </div>
-</div>
+            <div class="ui negative message">
+                <i class="close icon"></i>
+                <div class="header">
+                    {{ message_err }}
+                </div>
+            </div>
 
-{%endif %}
+        {% endif %}
 
-<br>
+        <br>
 
-<h3 style="color: darkgreen">Upload file from this page:</h3>
-<form action="/ul/?browser_upload=True"
-      method="post"
-      enctype="multipart/form-data">
-    Step 1) Select a file: <input type="file" name="file"/>
-    <br>
-    <br>
-    Step 2) Upload file: <input type="submit" value="Upload Now">
-</form>
 
-<br><br>
+        <form action="/ul/?browser_upload=True"
+              method="post"
+              enctype="multipart/form-data">
 
-<h3 style="color: darkgreen">Example of uploading file "local/testfile.txt" to UpLily on command line with curl</h3>
-<pre>
+            <div class="ui placeholder segment upload-area">
+                <div class="ui icon header">
+                    <i class="file outline icon"><span style="display: inline-block" id="file_name"></span></i>
+
+                    <p style="color: #0d71bb; display: inline-block">Drag and Drop</p> here or <label
+                        for="embedpollfileinput"
+                        class="ui primary basic button"
+                        style="display: inline-block">select</label>
+                    a file and
+                    <button class="ui positive basic button disabled" style="display: inline-block" id="upload_button">
+                        Upload
+                    </button>
+                </div>
+                <!--This input button is hidden by CSS-->
+                <input type="file" (change)="fileEvent($event)" class="inputfile" id="embedpollfileinput" name="file"/>
+            </div>
+        </form>
+
+        <h3 style="color: darkgreen">Example of uploading file "local/testfile.txt" to UpLily on command line with
+            curl</h3>
+        <pre>
     curl -X POST -F 'file=@./local/testfile.txt' {{ my_server }}ul/
 </pre>
 
-<br>
+        <br>
 
-<h3 style="color: darkorange">Available files to download:</h3>
+        <h3 style="color: darkorange">Available files to download:</h3>
 
-{% if uploaded_files_list.keys()|length > 0 %}
-    {% for key, value in uploaded_files_list.items() %}
-        <li><a href="{{ value["download_url"] }}">{{ key }}</a> ({{ value["locale"] }}, size: {{ value["file_size_in_bytes"] }} Bytes, MD5: {{ value["md5_hash"]}})</li>
-    {% endfor %}
-{% else %}
-    <i>No files uploaded yet</i>
-{% endif %}
+        {% if uploaded_files_list.keys()|length > 0 %}
+            {% for key, value in uploaded_files_list.items() %}
+                <li><a href="{{ value["download_url"] }}">{{ key }}</a> ({{ value["locale"] }},
+                    size: {{ value["file_size_in_bytes"] }} Bytes, MD5: {{ value["md5_hash"] }})
+                </li>
+            {% endfor %}
+        {% else %}
+            <i>No files uploaded yet</i>
+        {% endif %}
 
-<br>
-<br>
-<h3 style="color: slategrey"> UpLily project is on GitHub <a href="https://github.com/rdpickard/uplily">here</a>.</h3>
+        <br>
+        <br>
+        <h3 style="color: slategrey"> UpLily project is on GitHub <a href="https://github.com/rdpickard/uplily">here</a>.
+        </h3>
 
-<script>
-        (function () {
-        document.getElementById("file_input").onchange = function () {
-            var files = document.getElementById("file_input").files;
-            var file = files[0];
-            if (!file) {
-                return alert("No file selected.");
+        <script>
+            (function () {
+                document.getElementById("file_input").onchange = function () {
+                    let files = document.getElementById("file_input").files;
+                    let file = files[0];
+                    if (!file) {
+                        return alert("No file selected.");
+                    }
+                    getSignedRequest(file);
+                };
+            })();
+
+
+        </script>
+
+        <script type="text/javascript">
+
+            let drag_and_drop_file_reference = null;
+            let file_select_reference = null;
+
+            // preventing page from redirecting
+            $("html").on("dragover", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            $("html").on("drop", function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            // Drag enter
+            $('.upload-area').on('dragenter', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+            });
+
+            // Drag over
+            $('.upload-area').on('dragover', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                $("h1").text("Drop");
+            });
+
+            // Drop
+            $('.upload-area').on('drop', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                // Unset anything done by using the Select button
+                file_select_reference = null;
+
+                drag_and_drop_file_reference = e.originalEvent.dataTransfer.files[0];
+
+                let file_path_elements = drag_and_drop_file_reference.name.toString().split("\\");
+
+                $("#file_name").text(file_path_elements[file_path_elements.length - 1]);
+                $("#file_name").removeClass("outline");
+                toggleUploadButton()
+            });
+
+            // When the user selects a file, get the file name and display it on the page
+            document.getElementById('embedpollfileinput').onchange = function () {
+                // Unset any files specified by drag-and-drop
+                drag_and_drop_file_reference = null;
+                file_select_reference = this.files[0];
+                let file_path_elements = this.value.toString().split("\\");
+                $("#file_name").text(file_path_elements[file_path_elements.length - 1]);
+                $("#file_name").removeClass("outline");
+                toggleUploadButton()
+            };
+
+            function toggleUploadButton() {
+                // Enables or disables the 'Upload' button depending on if there a file specified
+                if (drag_and_drop_file_reference == null && file_select_reference == null) {
+                    $("#upload_button").addClass("disabled");
+                    $("#upload_button").addClass("basic")
+                } else {
+                    $("#upload_button").removeClass("disabled");
+                    $("#upload_button").removeClass("basic")
+
+                }
             }
-            getSignedRequest(file);
-        };
-    })();
 
-</script>
+            $("#upload_button").click(function (event) {
+                event.preventDefault();
+
+                let fd = new FormData();
+
+                if (drag_and_drop_file_reference != null) {
+                    fd.append('file', drag_and_drop_file_reference);
+                } else if (file_select_reference != null) {
+                    fd.append('file', file_select_reference);
+                } else {
+                    // No file selected, don't make the AJAX call
+                    return;
+                }
+
+                $.ajax({
+                    url: '/ul/',
+                    type: 'post',
+                    data: fd,
+                    contentType: false,
+                    processData: false
+                })
+                    .done(function () {
+                        location.reload()
+                    })
+                    .fail(function () {
+                        alert("error");
+                    })
+                    .always(function () {
+
+                    });
+            });
+
+        </script>
+    </div>
+</div>
+</body>
