@@ -1,5 +1,10 @@
 <!doctype html>
-<head><title>UpLily</title></head>
+<head>
+    <title>UpLily</title>
+    <link href="css/semantic.min.css" rel="stylesheet">
+
+    <script src="js/semantic.min.js"></script>
+</head>
 
 <script type="text/javascript">
     function uploadFile(file, s3Data, url) {
@@ -60,13 +65,33 @@
 
 A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services. <br>
 
+{% if message_ok is defined and message_ok is not none and message_ok|length %}
+<div class="ui positive message">
+  <i class="close icon"></i>
+  <div class="header">
+    {{ message_ok }}
+  </div>
+</div>
+{%endif %}
+
+{% if message_err is defined and message_err is not none and message_err|length %}
+
+<div class="ui negative message">
+  <i class="close icon"></i>
+  <div class="header">
+    {{ message_err }}
+  </div>
+</div>
+
+{%endif %}
+
 <br>
 
 <h3 style="color: darkgreen">Upload file from this page:</h3>
 <form action="/ul/?browser_upload=True"
       method="post"
       enctype="multipart/form-data">
-    Step 1) Select a file: <input type="file"  id="file_input"/>
+    Step 1) Select a file: <input type="file" name="file"/>
     <br>
     <br>
     Step 2) Upload file: <input type="submit" value="Upload Now">

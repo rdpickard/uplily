@@ -7,6 +7,7 @@ from werkzeug.utils import secure_filename
 import boto3
 
 application = flask.Flask(__name__)
+application.config['TEMPLATES_AUTO_RELOAD'] = True
 
 uploads_dir = "/tmp/uplily/"
 if not os.path.exists(uploads_dir):
@@ -38,7 +39,7 @@ def upload_file():
     file.save(os.path.join(uploads_dir, filename))
 
     if flask.request.args.get("browser_upload", False):
-        return flask.redirect("/", code=302)
+        return flask.redirect("/?message_ok=Upload%20OK", code=302)
     else:
         return "OK"
 
@@ -60,7 +61,9 @@ def index():
     return flask.render_template('index.jinja2',
                                  my_server=flask.request.url_root,
                                  uploaded_files_dir=uploads_dir,
-                                 uploaded_files_list=uploaded_files)
+                                 uploaded_files_list=uploaded_files,
+                                 message_ok=flask.request.args.get("message_ok", None),
+                                 message_err=flask.request.args.get("message_err", None))
 
 
 @application.route('/dl/<string:filename>')
@@ -103,6 +106,26 @@ def sign_s3():
         'data': presigned_post,
         'url': 'https://%s.s3.amazonaws.com/%s' % (s3_bucket, file_name)
     })
+
+
+@application.route('/css/<path:path>')
+def send_css(path):
+    return flask.send_from_directory('staticfiles/css', path)
+
+
+@application.route('/js/<path:path>')
+def send_js(path):
+    return flask.send_from_directory('staticfiles/js', path)
+
+
+@application.route('/fonts/<path:path>')
+def send_font(path):
+    return flask.send_from_directory('staticfiles/fonts', path)
+
+
+@application.route('/media/<path:path>')
+def send_media(path):
+    return flask.send_from_directory('staticfiles/media', path)
 
 
 @application.before_first_request
