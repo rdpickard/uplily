@@ -118,27 +118,17 @@
 
         <h3 style="color: darkgreen">Example of uploading file "local/testfile.txt" to UpLily on command line with
             curl</h3>
-        <pre>
-    curl -X POST -F 'file=@./local/testfile.txt' {{ my_server }}ul/
-</pre>
-
-        <br>
-
+        <pre> curl -X POST -F 'file=@./local/testfile.txt' {{ my_server }}ul/</pre>
         <h3 style="color: darkorange">Available files to download:</h3>
+            <div class="ui relaxed divided list" id="available_files_list">
+                <span id="available_files_list_no_files" style="font-style: italic;">No files uploaded yet </span>
+            </div>
 
-        {% if uploaded_files_list.keys()|length > 0 %}
-            {% for key, value in uploaded_files_list.items() %}
-                <li><a href="{{ value["download_url"] }}">{{ key }}</a> ({{ value["locale"] }},
-                    size: {{ value["file_size_in_bytes"] }} Bytes, MD5: {{ value["md5_hash"] }})
-                </li>
-            {% endfor %}
-        {% else %}
-            <i>No files uploaded yet</i>
-        {% endif %}
 
         <br>
         <br>
-        <h3 style="color: slategrey"> <i class="ui github icon"></i> UpLily project is on GitHub <a href="https://github.com/rdpickard/uplily">here</a>.
+        <h3 style="color: slategrey"><i class="ui github icon"></i> UpLily project is on GitHub <a
+                href="https://github.com/rdpickard/uplily">here</a>.
         </h3>
 
         <script>
@@ -182,7 +172,6 @@
             $('.upload-area').on('dragover', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
-                $("h1").text("Drop");
             });
 
             // Drop
@@ -247,7 +236,8 @@
                     processData: false
                 })
                     .done(function () {
-                        location.reload()
+                        refreshAvailableFilesList();
+                        clearUploadDialog()
                     })
                     .fail(function () {
                         alert("error");
@@ -257,6 +247,83 @@
                     });
             });
 
+            function clearUploadDialog() {
+                drag_and_drop_file_reference = null;
+                file_select_reference = null;
+                $("#file_name").text("");
+                toggleUploadButton();
+            }
+
+            function refreshAvailableFilesList() {
+                // Add / remove elements from list of files that can be downloaded
+                $.ajax({
+                    url: '/available_files',
+                    type: 'get',
+                    dateType: "json",
+                    contentType: false,
+                    processData: false
+                })
+                    .done(function (response) {
+
+                        let hashes_list = [];
+
+                        // Show or hide 'no files' depending on the number of files available for download
+                        if (Object.keys(response).length > 0) {
+                            $("#available_files_list_no_files").hide();
+                        } else {
+                            $("#available_files_list_no_files").show();
+                        }
+
+
+                        // Check to see if any files need to be added to the list
+                        for (let key in response) {
+                            if (response.hasOwnProperty(key)) {
+                                // Create a running list of hash values. Will use later to find elements to remove
+                                hashes_list.push("a_file_"+response[key]['md5_hash']);
+
+                                // Is there a element in the list for this file?
+                                if (!$('#a_file_' + response[key]['md5_hash']).length) {
+                                    $("#available_files_list").prepend(
+                                        ` <div class="item" id="a_file_${ response[key]["md5_hash"] }">
+                                            <i class="large circle outline middle aligned icon"></i>
+                                            <div class="content">
+                                            <a class="header"><a href="${ response[key]["download_url"] }">${ key }</a></a>
+                                            <div class="description">Size: ${ response[key]["file_size_in_bytes"] } Bytes,
+                                                MD5: ${ response[key]["md5_hash"] }</div>
+                                            </div>
+                                          </div>
+                                       `
+                                    )
+                                    $('#a_file_' + response[key]['md5_hash']).transition('pulse')
+
+                                }
+                            }
+                        }
+
+                        // Check to see if any files need to be removed from the list
+                        console.log(hashes_list)
+                        $.each( $("[id^=a_file_]"), function () {
+                            if ( hashes_list.includes($(this).attr("id"))) {
+                                console.log( "all good "+$(this).attr("id") );
+                            } else {
+                                $(this).remove();
+                                console.log( "missing! "+$(this).attr("id") );
+                            }
+                        });
+
+                    })
+                    .fail(function () {
+                        console.log("refreshAvailableFilesList error");
+                    })
+                    .always(function () {
+
+                    });
+            }
+
+            $( document ).ready(function() {
+                refreshAvailableFilesList();
+            });
+            window.setInterval(refreshAvailableFilesList, 2000);
         </script>
     </div>
 </div>

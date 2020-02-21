@@ -23,6 +23,16 @@ def md5_a_file(fname):
     return hash_md5.hexdigest()
 
 
+def uploaded_files_on_local_fs():
+    uploaded_files = {}
+    for filename in [f for f in os.listdir(uploads_dir) if os.path.isfile(uploads_dir+"/"+f)]:
+        uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
+                                    "locale": "Local FS",
+                                    "md5_hash": md5_a_file(os.path.join(uploads_dir, filename)),
+                                    "file_size_in_bytes": os.stat(os.path.join(uploads_dir, filename)).st_size}
+    return uploaded_files
+
+
 @application.route('/ul/', methods=['POST'])
 def upload_file():
     # check if the post request has the file part
@@ -44,24 +54,26 @@ def upload_file():
         return "OK"
 
 
+@application.route("/available_files")
+def available_files():
+    """
+    Returns a JSON object of the files available to download
+    :return:
+    """
+    return flask.jsonify(uploaded_files_on_local_fs())
+
+
 @application.route('/')
 def index():
     """
     Renders the 'index' page
     :return:
     """
-    uploaded_files = dict()
-
-    for filename in [f for f in os.listdir(uploads_dir) if os.path.isfile(uploads_dir+"/"+f)]:
-        uploaded_files[filename] = {"download_url": "{}dl/{}".format(flask.request.url_root, filename),
-                                    "locale": "Local FS",
-                                    "md5_hash": md5_a_file(os.path.join(uploads_dir, filename)),
-                                    "file_size_in_bytes": os.stat(os.path.join(uploads_dir, filename)).st_size}
 
     return flask.render_template('index.jinja2',
                                  my_server=flask.request.url_root,
                                  uploaded_files_dir=uploads_dir,
-                                 uploaded_files_list=uploaded_files,
+                                 uploaded_files_list=uploaded_files_on_local_fs(),
                                  message_ok=flask.request.args.get("message_ok", None),
                                  message_err=flask.request.args.get("message_err", None))
 
