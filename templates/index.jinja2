@@ -16,6 +16,8 @@
         let xhr = new XMLHttpRequest();
         let key = null;
 
+        $("#s3_upload_progress_uploading_step_txt").css("color", "black");
+
         xhr.open("POST", s3Data.url);
 
         let postData = new FormData();
@@ -30,8 +32,13 @@
             if (xhr.readyState === 4) {
 
                 if (xhr.status === 200 || xhr.status === 204) {
-                    clearUploadDialog();
-                    toggleUploadButton();
+                    $("#s3_upload_progress_uploading_step_icon").removeClass("square outline grey").addClass("checkmark green");
+                    $("#s3_upload_progress_uploaded_step_icon").removeClass("square outline grey").addClass("checkmark green");
+                    $("#s3_upload_progress_uploaded_step_txt").css("color", "black");
+                    setTimeout(function() {
+                        clearUploadDialog();
+                        toggleUploadButton();},
+                        1000);
                 } else if (xhr.status === 302 || xhr.status === 307) {
                     // Newly created S3 buckets will respond with a 30x redirect for their first couple hours of
                     // existence. This seems to be due to backend DNS processes trailing the bucket creation.
@@ -48,11 +55,15 @@
     }
 
     function getSignedRequest(file) {
+
+        $("#s3_upload_progress_fetch_step_txt").css("color", "black");
+
         let xhr = new XMLHttpRequest();
         xhr.open("GET", "/sign_s3?file_name=" + file.name + "&file_type=" + file.type);
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
+                    $("#s3_upload_progress_fetch_step_icon").removeClass("square outline grey").addClass("checkmark green");
                     let response = JSON.parse(xhr.responseText);
                     uploadFile(file, response.data, response.url);
                 } else {
@@ -98,7 +109,33 @@
               method="post"
               enctype="multipart/form-data">
 
-            <div class="ui placeholder center aligned attached segment upload-area">
+            <div class="ui placeholder center aligned attached segment  upload-area">
+                <div class="ui active inverted dimmer" style="display: none" id="s3_upload_progress_overlay">
+                  <div class="ui indeterminate text loader">
+                      <div class="ui list">
+                      <div class="item">
+                          <i class="ui square outline grey icon" id="s3_upload_progress_fetch_step_icon"></i>
+                          <div class="content">
+                            <div class="header" style="color: gray" id="s3_upload_progress_fetch_step_txt">Fetching pre-signed URL </div>
+                          </div>
+                      </div>
+                      <div class="item">
+                          <i class="ui square outline grey icon" id="s3_upload_progress_uploading_step_icon"></i>
+                          <div class="content">
+                        <div class="header" style="color: gray" id="s3_upload_progress_uploading_step_txt">Uploading file to S3</div>
+                      </div>
+                      </div>
+                          <div class="item">
+                          <i class="ui square outline grey icon" id="s3_upload_progress_uploaded_step_icon"></i>
+                          <div class="content">
+                        <div class="header" style="color: gray" id="s3_upload_progress_uploaded_step_txt">Uploading complete</div>
+                      </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
                 <div class="ui center aligned">
                     <div class="ui top attached label">
                     <p style="color: #0d71bb; display: inline-block" >Drag and Drop</p> here or <label
@@ -288,6 +325,7 @@
                 } // end if of uploading to local fs
                 else if (upload_target === "upload_target_aws_s3")
                 {
+                    $("#s3_upload_progress_overlay").show();
                     getSignedRequest(file_reference)
                 } // end if of uploading to s3
             });
@@ -297,6 +335,12 @@
                 file_select_reference = null;
                 $("#file_name").text("");
                 toggleUploadButton();
+
+                // Hide the s3 progress spinner overlay, set all the steps back to undone
+                $("#s3_upload_progress_overlay").hide();
+                $("div[id^=s3_upload_progress_]").not("#s3_upload_progress_overlay").css("color", "gray");
+                $("i[id^=s3_upload_progress_]").removeClass("checkmark").removeClass("green").addClass("square outline").addClass("grey")
+
             }
 
             function refreshAvailableFilesList() {
