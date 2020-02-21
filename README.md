@@ -8,7 +8,7 @@ Heroku Dynamos.
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-![Screenshot](https://raw.githubusercontent.com/rdpickard/uplily/master/media/UpLily%20screenshot.png)
+![Screenshot](https://raw.githubusercontent.com/rdpickard/uplily/master/media/UpLily%20screenshot.png =250x)
 
 ### Example use cases
 
