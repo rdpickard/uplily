@@ -70,10 +70,14 @@ def index():
     :return:
     """
 
+    s3_enabled = all(map(lambda ev: os.environ.get(ev) is not None,
+                   ['S3_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']))
+
     return flask.render_template('index.jinja2',
                                  my_server=flask.request.url_root,
                                  uploaded_files_dir=uploads_dir,
                                  uploaded_files_list=uploaded_files_on_local_fs(),
+                                 s3_enabled=s3_enabled,
                                  message_ok=flask.request.args.get("message_ok", None),
                                  message_err=flask.request.args.get("message_err", None))
 

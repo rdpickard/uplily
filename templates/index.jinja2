@@ -30,7 +30,8 @@
             if (xhr.readyState === 4) {
 
                 if (xhr.status === 200 || xhr.status === 204) {
-
+                    clearUploadDialog();
+                    toggleUploadButton();
                 } else if (xhr.status === 302 || xhr.status === 307) {
                     // Newly created S3 buckets will respond with a 30x redirect for their first couple hours of
                     // existence. This seems to be due to backend DNS processes trailing the bucket creation.
@@ -97,7 +98,7 @@
               method="post"
               enctype="multipart/form-data">
 
-            <div class="ui placeholder center aligned segment upload-area">
+            <div class="ui placeholder center aligned attached segment upload-area">
                 <div class="ui center aligned">
                     <div class="ui top attached label">
                     <p style="color: #0d71bb; display: inline-block" >Drag and Drop</p> here or <label
@@ -119,7 +120,17 @@
                 <a class="ui red right corner label" id="cancel_upload" style="display:none">
                     <i class="cancel icon"></i>
                 </a>
+
             </div>
+            {% if s3_enabled is defined and s3_enabled == true %}
+
+            <div class="ui two bottom attached buttons">
+                <div class="ui blue button active" id="upload_target_local_fs"><i class="hdd icon"></i>Local FS</div>
+                  <div class="or"></div>
+                <div class="ui yellow basic button" id="upload_target_aws_s3"><i class="aws icon"></i>S3</div>
+            </div>
+            {% endif %}
+
 
         </form>
 
@@ -157,6 +168,7 @@
 
             let drag_and_drop_file_reference = null;
             let file_select_reference = null;
+            let upload_target = null;
 
             $("#cancel_upload").click(function (event) {
                 clearUploadDialog();
@@ -240,36 +252,44 @@
             }
 
             $("#upload_button").click(function (event) {
+
+                let file_reference = null;
                 event.preventDefault();
 
-                let fd = new FormData();
-
                 if (drag_and_drop_file_reference != null) {
-                    fd.append('file', drag_and_drop_file_reference);
-                } else if (file_select_reference != null) {
-                    fd.append('file', file_select_reference);
-                } else {
-                    // No file selected, don't make the AJAX call
-                    return;
-                }
+                        file_reference = drag_and_drop_file_reference
+                    } else if (file_select_reference != null) {
+                        file_reference = file_select_referencel
+                    } else {
+                        // No file selected, don't make the AJAX call
+                        return;
+                    }
 
-                $.ajax({
-                    url: '/ul/',
-                    type: 'post',
-                    data: fd,
-                    contentType: false,
-                    processData: false
-                })
-                    .done(function () {
-                        refreshAvailableFilesList();
-                        clearUploadDialog()
+                if (upload_target == null || upload_target === "upload_target_local_fs") {
+                    let fd = new FormData();
+                    fd.append("file", file_reference)
+                    $.ajax({
+                        url: '/ul/',
+                        type: 'post',
+                        data: fd,
+                        contentType: false,
+                        processData: false
                     })
-                    .fail(function () {
-                        alert("error");
-                    })
-                    .always(function () {
+                        .done(function () {
+                            refreshAvailableFilesList();
+                            clearUploadDialog()
+                        })
+                        .fail(function () {
+                            alert("error");
+                        })
+                        .always(function () {
 
-                    });
+                        });
+                } // end if of uploading to local fs
+                else if (upload_target === "upload_target_aws_s3")
+                {
+                    getSignedRequest(file_reference)
+                } // end if of uploading to s3
             });
 
             function clearUploadDialog() {
@@ -345,10 +365,41 @@
                     });
             }
 
+            $("div[id^=upload_target_]").hover(
+                // On rollover of unselected target visually emphasize the button, on rollout visually de-emphasize
+                function() {
+                    if (!$(this).hasClass("active")) {
+                        $(this).removeClass("basic")
+                    }
+                },
+                function() {
+                    if (!$(this).hasClass("active")) {
+                        $(this).addClass("basic")
+                    }
+                },
+            );
+            $("div[id^=upload_target_]").click(
+                // On clicking an upload target button, visually de-emphasize the other targets and set the
+                // clicked button as the desired target
+                function() {
+                    if (!$(this).hasClass("active")) {
+                        $(this).removeClass("basic");
+                        $(this).addClass("active");
+                        $("div[id^=upload_target_]").not(this).removeClass("active").addClass("basic")
+                        console.log("Seeting upload target")
+                        upload_target = $(this).attr("id");
+                                                console.log(upload_target)
+
+                    }});
+
+
             $( document ).ready(function() {
                 $("#cancel_upload").hide();
                 refreshAvailableFilesList();
             });
+
+            // Every 2 seconds check for the available files and update the list on the with new or removed files on
+            // screen
             window.setInterval(refreshAvailableFilesList, 2000);
         </script>
     </div>
