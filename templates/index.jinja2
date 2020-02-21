@@ -98,11 +98,10 @@
               method="post"
               enctype="multipart/form-data">
 
-            <div class="ui placeholder segment upload-area">
-                <div class="ui icon header">
-                    <i class="file outline icon"><span style="display: inline-block" id="file_name"></span></i>
-
-                    <p style="color: #0d71bb; display: inline-block">Drag and Drop</p> here or <label
+            <div class="ui placeholder center aligned segment upload-area">
+                <div class="ui center aligned">
+                    <div class="ui top attached label">
+                    <p style="color: #0d71bb; display: inline-block" >Drag and Drop</p> here or <label
                         for="embedpollfileinput"
                         class="ui primary basic button"
                         style="display: inline-block">select</label>
@@ -110,10 +109,19 @@
                     <button class="ui positive basic button disabled" style="display: inline-block" id="upload_button">
                         Upload
                     </button>
+                    </div>
+
+                    <i class="huge thumbs up outline middle aligned icon" style="display: none; color: darkolivegreen" id="upload_area_thumbsup"></i>
+                    <span id="file_name" style="font-family: 'Lucida Blackletter'; font-size: x-large"></span>
+
                 </div>
                 <!--This input button is hidden by CSS-->
                 <input type="file" (change)="fileEvent($event)" class="inputfile" id="embedpollfileinput" name="file"/>
+                <a class="ui red right corner label" id="cancel_upload" style="display:none">
+                    <i class="cancel icon"></i>
+                </a>
             </div>
+
         </form>
 
         <h3 style="color: darkgreen">Example of uploading file "local/testfile.txt" to UpLily on command line with
@@ -151,6 +159,11 @@
             let drag_and_drop_file_reference = null;
             let file_select_reference = null;
 
+            $("#cancel_upload").click(function (event) {
+                clearUploadDialog();
+                toggleUploadButton();
+            });
+
             // preventing page from redirecting
             $("html").on("dragover", function (e) {
                 e.preventDefault();
@@ -168,16 +181,27 @@
                 e.preventDefault();
             });
 
+            $('.upload-area').on('dragleave', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+                $("#upload_area_thumbsup").hide()
+                $("#file_name").show()
+            });
+
             // Drag over
             $('.upload-area').on('dragover', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
+                $("#upload_area_thumbsup").show()
+                $("#file_name").hide()
             });
 
             // Drop
             $('.upload-area').on('drop', function (e) {
                 e.stopPropagation();
                 e.preventDefault();
+                $("#file_name").show()
+                $("#upload_area_thumbsup").hide()
 
                 // Unset anything done by using the Select button
                 file_select_reference = null;
@@ -207,9 +231,11 @@
                 if (drag_and_drop_file_reference == null && file_select_reference == null) {
                     $("#upload_button").addClass("disabled");
                     $("#upload_button").addClass("basic")
+                    $("#cancel_upload").hide()
                 } else {
                     $("#upload_button").removeClass("disabled");
                     $("#upload_button").removeClass("basic")
+                    $("#cancel_upload").show()
 
                 }
             }
@@ -301,13 +327,13 @@
                         }
 
                         // Check to see if any files need to be removed from the list
-                        console.log(hashes_list)
+
                         $.each( $("[id^=a_file_]"), function () {
                             if ( hashes_list.includes($(this).attr("id"))) {
-                                console.log( "all good "+$(this).attr("id") );
+
                             } else {
                                 $(this).remove();
-                                console.log( "missing! "+$(this).attr("id") );
+
                             }
                         });
 
@@ -321,6 +347,7 @@
             }
 
             $( document ).ready(function() {
+                $("#cancel_upload").hide();
                 refreshAvailableFilesList();
             });
             window.setInterval(refreshAvailableFilesList, 2000);
