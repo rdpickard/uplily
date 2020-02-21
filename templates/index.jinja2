@@ -67,6 +67,7 @@
 <body>
 <div class="content">
     <div class="ui main container">
+        <br>
         <h1 class="ui header">UpLily file upload catcher</h1>
 
         A tiny server for uploading and downloading files over HTTP. Can run locally or on cloud services. <br>
@@ -92,8 +93,6 @@
         {% endif %}
 
         <br>
-
-
         <form action="/ul/?browser_upload=True"
               method="post"
               enctype="multipart/form-data">
@@ -103,10 +102,10 @@
                     <div class="ui top attached label">
                     <p style="color: #0d71bb; display: inline-block" >Drag and Drop</p> here or <label
                         for="embedpollfileinput"
-                        class="ui primary basic button"
+                        class="tiny ui primary basic tiny button"
                         style="display: inline-block">select</label>
                     a file and
-                    <button class="ui positive basic button disabled" style="display: inline-block" id="upload_button">
+                    <button class="tiny ui positive basic button disabled" style="display: inline-block" id="upload_button">
                         Upload
                     </button>
                     </div>
