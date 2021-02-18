@@ -33,6 +33,46 @@ def uploaded_files_on_local_fs():
     return uploaded_files
 
 
+def create_presigned_url(bucket_name, object_name, expiration=3600):
+    """Generate a presigned URL to share an S3 object
+
+    :param bucket_name: string
+    :param object_name: string
+    :param expiration: Time in seconds for the presigned URL to remain valid
+    :return: Presigned URL as string. If error, returns None.
+    """
+
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name,
+                                                            'Key': object_name},
+                                                    ExpiresIn=expiration)
+    except Exception as e:
+        application.logging.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return response
+
+def list_files_in_s3_bucket():
+
+    s3_files = {}
+    s3_enabled = all(map(lambda ev: os.environ.get(ev) is not None,
+                   ['S3_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']))
+    s3_bucket_name = os.environ.get('S3_BUCKET')
+    s3 = boto3.resource("s3")
+    s3_bucket = s3.Bucket(s3_bucket_name)
+
+    for my_bucket_object in s3_bucket.objects.all():
+        s3_files[my_bucket_object.key] = {"download_url": create_presigned_url(s3_bucket_name, my_bucket_object.key),
+                                          "locale": "S3",
+                                          "md5_hash": my_bucket_object.e_tag[1 :-1],
+                                          "file_size_in_bytes":my_bucket_object.size}
+
+    return s3_files
+
 @application.route('/ul/', methods=['POST'])
 def upload_file():
     # check if the post request has the file part
@@ -60,7 +100,17 @@ def available_files():
     Returns a JSON object of the files available to download
     :return:
     """
-    return flask.jsonify(uploaded_files_on_local_fs())
+    s3_files = {}
+    s3_enabled = all(map(lambda ev: os.environ.get(ev) is not None,
+                   ['S3_BUCKET', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY']))
+
+    if s3_enabled:
+        s3_files = list_files_in_s3_bucket()
+
+    local_files = uploaded_files_on_local_fs()
+
+    local_files.update(s3_files)
+    return flask.jsonify(local_files)
 
 
 @application.route('/')

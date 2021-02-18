@@ -10,6 +10,46 @@ Heroku Dynamos.
 
 ![Screenshot](https://raw.githubusercontent.com/rdpickard/uplily/master/media/UpLily%20screenshot.png)
 
+### Configuring S3 as storage
+
+For large files UpLily can be configured as a front end to private S3 buckets. 
+
+To configure S3 backend set the environment variables `S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.
+
+`S3_BUCKET` is the name of the bucket. Just the name, _not_ the ARN. 
+
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are the IAM keys for a user that can access the bucket.
+
+In the bucket permissions make sure the CORS settings allow for access from the server. Full directions on
+CORS are [here on the AWS documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/cors.html). An example
+CORS setting to allow access from a local instance of UpLily running on 127.0.0.1:5000 
+
+```angular2html
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "POST",
+            "DELETE",
+            "GET"
+        ],
+        "AllowedOrigins": [
+            "http://127.0.0.1:5000"
+        ],
+        "ExposeHeaders": []
+    },
+ ]
+```
+
+If the environment variables are set and the CORS is configured in the S3 bucket the UpLily UI will have an option for 
+uploading to local FS or S3
+
+![Screenshot](https://raw.githubusercontent.com/rdpickard/uplily/master/media/s3_ui_option.png)
+
+
 ### Example use cases
 
 #### Two users in different, non-publicly accessible networks
@@ -43,6 +83,10 @@ After you're finished, stop and erase the Dyno
 ```
 heroku destroy
 ```
+
+If you want S3 as a backend set the environment variables in the application Settings > Config Vars section
+
+
 
 #### Running on a locally on your machine
 
